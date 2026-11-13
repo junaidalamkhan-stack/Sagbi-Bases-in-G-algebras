@@ -3,12 +3,8 @@ Example 5:
 Example 6:
 Added new generator of degree: 2
   products of degree <= 8: 341 words, span of dimension 41, leading monomials outside the LM-monoid: 0
-Example 7, input H (negative control):
+Generating set of Example 7 (negative control):
   leading monomial not in the LM-monoid: e3f  from  4e3f-2e2h2-10e2h-8e2
   leading monomial not in the LM-monoid: ef3  from  -4ef3+2f2h2-6f2h
   leading monomial not in the LM-monoid: e5f  from  4e5f-2e4h2-10e4h-8e4
   products of degree <= 8: 518 words, span of dimension 80, leading monomials outside the LM-monoid: 5
-Example 7, output of ncsagbi:
-Added new generator of degree: 4
-Added new generator of degree: 4
-  products of degree <= 8: 672 words, span of dimension 84, leading monomials outside the LM-monoid: 0

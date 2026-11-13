@@ -1,5 +1,3 @@
-4efh-2h2-2h
-0
 Added new generator of degree: 4
 Added new generator of degree: 4
 SB[1]=h

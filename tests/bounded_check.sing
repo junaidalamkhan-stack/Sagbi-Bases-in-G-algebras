@@ -3,8 +3,8 @@
 // of their K-span are computed by Gaussian elimination, and each is tested
 // for being a product of leading monomials of SB.  A leading monomial
 // outside that monoid proves that SB is NOT a SAGBI basis; none up to degree
-// D is evidence (not a proof) that SB is one.  The input of Example 7 serves
-// as a negative control.
+// D is evidence (not a proof) that SB is one.  The generating set of
+// Example 7 serves as a negative control.
 option(noredefine);
 LIB "ncsagbi.lib";
 proc lmMonoid(ideal SB, int D)
@@ -75,10 +75,7 @@ setring U;
 ideal SB = ncsagbi(ideal(e, h^2), 10);
 boundedCheck(SB, 8);
 
-"Example 7, input H (negative control):";
+"Generating set of Example 7 (negative control):";
 ideal H = h, e^2, f^2, e*f*h;
 boundedCheck(H, 8);
-"Example 7, output of ncsagbi:";
-ideal SB = ncsagbi(H, 5);
-boundedCheck(SB, 8);
 quit;

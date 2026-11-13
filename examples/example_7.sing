@@ -8,10 +8,6 @@ matrix D[3][3]; D[1,2]=-h; D[1,3]=2e; D[2,3]=-2f;
 def U = nc_algebra(C, D);  // f*e = e*f - h, h*e = e*h + 2e, h*f = f*h - 2f
 setring U;
 ideal H = h, e^2, f^2, e*f*h;
-// the T-polynomial of the critical pair (p2*p3, p3*p2) and its SAGBI normal form
-poly T = e^2*f^2 - f^2*e^2;
-T;
-snf(T, H);
 ideal SB = ncsagbi(H, 5);
 SB;
 quit;
