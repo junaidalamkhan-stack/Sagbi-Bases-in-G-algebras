@@ -1,0 +1,10 @@
+// Example 5 of the paper: H = {x^2, x*d, d^2} is a SAGBI basis in the first
+// Weyl algebra A_1 with the lexicographical ordering (x > d).
+option(noredefine);
+LIB "ncsagbi.lib";
+ring r = 0, (x, d), lp;
+def A1 = Weyl(); setring A1;             // d*x = x*d + 1
+ideal H = x^2, x*d, d^2;
+ideal SB = ncsagbi(H, 10);
+SB;
+quit;

@@ -1,0 +1,4 @@
+Added new generator of degree: 2
+SB[1]=e
+SB[2]=h2
+SB[3]=eh+e

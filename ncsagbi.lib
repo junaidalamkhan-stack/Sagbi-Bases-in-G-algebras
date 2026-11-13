@@ -1,0 +1,304 @@
+///////////////////////////////////////////////////////////////////////////
+version="1.0";
+category="Noncommutative Algebra";
+info="
+LIBRARY: ncsagbi.lib   SAGBI-Groebner Bases in G-Algebras
+
+OVERVIEW:
+This library extends the concept of SAGBI bases to non-commutative G-algebras.
+It provides tools for computing Subalgebra Normal Forms (SNF) and SAGBI bases 
+for subalgebras. In contrast to classical commutative algorithms, this 
+implementation specifically handles the non-commutative operator tails that 
+arise during polynomial reduction.
+
+AUTHORS:
+ Muhammad Abdul Basit Khan  <mabasit@iba.edu.pk>
+ Junaid Alam Khan            <jakhan@iba.edu.pk>
+
+REFERENCES:
+ Muhammad Abdul Basit Khan, Junaid Alam Khan, Muhammad Ahsan Banyamin (2019). 
+ 'SAGBI-Groebner Bases in G-algebras', Symmetry.
+
+PROCEDURES:
+ elimgb(H);            Creates a commutative mapping ring for critical pairs
+ snf(s, H);            Computes the Subalgebra Normal Form
+ cpairs(G, R_comm);    Computes non-commutative critical syzygy pairs
+ ncsagbi(H, max_degree); Computes the SAGBI basis up to a maximum degree
+";
+
+LIB "elim.lib";
+LIB "algebra.lib";
+
+///////////////////////////////////////////////////////////////////////////
+
+proc elimgb(ideal H)
+{
+   def orig_ring = basering;
+   int n_vars = nvars(orig_ring);
+   int m_vars = ncols(H);
+
+   string ring_def = "ring R_comm = 0, (";
+   for(int i=1; i<=n_vars; i++) { ring_def = ring_def + varstr(i) + ","; }
+   for(int j=1; j<=m_vars; j++) { ring_def = ring_def + "y" + string(j); if(j<m_vars){ring_def=ring_def+",";} }
+   ring_def = ring_def + "), (dp(" + string(n_vars) + "), dp(" + string(m_vars) + "));";
+
+   execute(ring_def);
+
+   ideal H_local = fetch(orig_ring, H);
+   ideal G;
+   for(int j=1; j<=m_vars; j++) {
+      poly lm_H = lead(H_local[j]);
+      G[j] = var(n_vars + j) - lm_H;
+   }
+
+   G = std(G);
+   export(G);
+   return(R_comm);
+}
+
+proc snf(poly s, ideal H)
+{
+  if (s == 0) { return(0); }
+
+  def orig_ring = basering;
+  int n_vars = nvars(orig_ring);
+  def R_comm = elimgb(H);
+
+  setring orig_ring;
+  poly remainder = s;
+  poly LT_rem;
+
+  int reduced = 1;
+  while(remainder != 0 and reduced == 1)
+  {
+    reduced = 0;
+    LT_rem = lead(remainder);
+    int is_constant = 1;
+    intvec v_rem = leadexp(LT_rem);
+    for(int i=1; i<=n_vars; i++) {
+       if (v_rem[i] > 0) { is_constant = 0;
+       break; }
+    }
+    if (is_constant == 1) {
+       remainder = remainder - LT_rem;
+       reduced = 1;
+       continue;
+    }
+
+    setring R_comm;
+    poly mapped_LT = fetch(orig_ring, LT_rem);
+    poly reduced_LT = reduce(mapped_LT, G);
+    int contains_x = 0;
+    poly temp_p = reduced_LT;
+    while(temp_p != 0) {
+       intvec v = leadexp(temp_p);
+       for(int i=1; i<=n_vars; i++) {
+          if (v[i] > 0) { contains_x = 1;
+          break; }
+       }
+       if(contains_x == 1) { break;
+       }
+       temp_p = temp_p - lead(temp_p);
+    }
+
+    if (contains_x == 0 and reduced_LT != mapped_LT)
+    {
+       poly temp_y = reduced_LT;
+       setring orig_ring;
+       poly mapped_H_monomial = 0;
+       number c_num;
+       int is_zero = 0;
+       while(is_zero == 0) {
+          setring R_comm;
+          if (temp_y == 0) {
+             is_zero = 1;
+          } else {
+             poly ty = lead(temp_y);
+             temp_y = temp_y - ty;
+             intvec v = leadexp(ty);
+             string c_str = string(leadcoef(ty));
+
+             setring orig_ring;
+             poly term_nc = 1;
+             for(int j=1; j<=ncols(H); j++) {
+                int exponent = v[n_vars + j];
+                for(int k_exp=1; k_exp<=exponent; k_exp++) {
+                   term_nc = term_nc * H[j];
+                }
+             }
+             execute("c_num = " + c_str + ";");
+             mapped_H_monomial = mapped_H_monomial + c_num * term_nc;
+          }
+       }
+
+       setring orig_ring;
+       number k = leadcoef(LT_rem) / leadcoef(mapped_H_monomial);
+       remainder = remainder - (k * mapped_H_monomial);
+       reduced = 1;
+    }
+    else {
+       setring orig_ring;
+    }
+  }
+  return(remainder);
+}
+
+proc cpairs(ideal H, def R_comm)
+{
+  def orig_ring = basering;
+  int n_vars = nvars(orig_ring);
+  int m_vars = ncols(H);
+
+  setring R_comm;
+  list critical_pairs_list = list();
+  int counter = 1;
+
+  for(int i=1; i<=ncols(G); i++)
+  {
+     int contains_x = 0;
+     poly temp_p = G[i];
+     while(temp_p != 0) {
+        intvec v = leadexp(temp_p);
+        for(int j=1; j<=n_vars; j++) {
+           if (v[j] > 0) { contains_x = 1;
+           break; }
+        }
+        if(contains_x == 1) { break;
+        }
+        temp_p = temp_p - lead(temp_p);
+     }
+
+     if (contains_x == 0) {
+        critical_pairs_list[counter] = G[i];
+        counter = counter + 1;
+     }
+  }
+
+  int num_pairs = counter - 1;
+  setring orig_ring;
+  ideal nc_Spolys;
+  int spoly_idx = 1;
+
+  if (num_pairs > 0) {
+     for(int i=1; i<=num_pairs; i++) {
+        setring R_comm;
+        poly temp_y = critical_pairs_list[i];
+        setring orig_ring;
+        poly eval_nc = 0;
+        number c_num;
+        int is_zero = 0;
+        while(is_zero == 0) {
+           setring R_comm;
+           if (temp_y == 0) {
+              is_zero = 1;
+           } else {
+              poly ty = lead(temp_y);
+              temp_y = temp_y - ty;
+              intvec v = leadexp(ty);
+              string c_str = string(leadcoef(ty));
+
+              setring orig_ring;
+              poly term_nc = 1;
+              for(int j=1; j<=ncols(H); j++) {
+                 int exponent = v[n_vars + j];
+                 for(int k_exp=1; k_exp<=exponent; k_exp++) {
+                    term_nc = term_nc * H[j];
+                 }
+              }
+              execute("c_num = " + c_str + ";");
+              eval_nc = eval_nc + c_num * term_nc;
+           }
+        }
+        setring orig_ring;
+        nc_Spolys[spoly_idx] = eval_nc;
+        spoly_idx = spoly_idx + 1;
+     }
+  }
+
+  setring orig_ring;
+  for(int i=1; i<=m_vars; i++) {
+     for(int j=i+1; j<=m_vars; j++) {
+        poly p_ij = H[i] * H[j];
+        poly p_ji = H[j] * H[i];
+
+        if (p_ij != 0 and p_ji != 0) {
+           if (leadexp(p_ij) == leadexp(p_ji)) {
+              poly comm_spoly = p_ij - (leadcoef(p_ij) / leadcoef(p_ji)) * p_ji;
+              if (comm_spoly != 0) {
+                 nc_Spolys[spoly_idx] = comm_spoly;
+                 spoly_idx = spoly_idx + 1;
+              }
+           }
+        }
+     }
+  }
+
+  return(nc_Spolys);
+}
+
+proc ncsagbi(ideal H, int max_degree)
+{
+   ideal G_basis = H;
+   int is_sagbi = 0;
+   while(is_sagbi == 0)
+   {
+      is_sagbi = 1;
+      def R_comm = elimgb(G_basis);
+      ideal S_polys = cpairs(G_basis, R_comm);
+
+      for(int i=1; i<=ncols(S_polys); i++)
+      {
+         if (S_polys[i] != 0)
+         {
+            poly r = snf(S_polys[i], G_basis);
+            if (r != 0)
+            {
+               r = r / leadcoef(r);
+               G_basis = G_basis, r;
+               is_sagbi = 0;
+
+               print("Added new generator of degree: " + string(deg(r)));
+               if (deg(r) > max_degree) {
+                  print("Max degree reached, terminating early.");
+                  return(G_basis);
+               }
+               break;
+            }
+         }
+      }
+   }
+   return(G_basis);
+}
+
+example
+{
+  "EXAMPLE 1: SAGBI Basis in First Weyl Algebra A_1 (lp order)"; echo = 2;
+  ring r5 = 0, (x, d), lp;
+  matrix C5[2][2]; C5[1,2]=1;
+  matrix D5[2][2]; D5[1,2]=1;
+  def A5 = nc_algebra(C5, D5); 
+  setring A5;
+  ideal H = x^2, x*d, d^2;
+  ideal SB = ncsagbi(H, 10);
+  SB;
+
+  "EXAMPLE 2: U(sl_2) Finite SAGBI Expansion (lp order)";
+  ring r6 = 0, (e, f, h), lp;
+  matrix C6[3][3]; C6[1,2]=1; C6[1,3]=1; C6[2,3]=1;
+  matrix D6[3][3]; D6[1,2]=-h; D6[1,3]=2e; D6[2,3]=-2f;
+  def A6 = nc_algebra(C6, D6); 
+  setring A6;
+  ideal H = e, h^2;
+  ideal SB = ncsagbi(H, 10);
+  SB;
+
+  "EXAMPLE 3: Infinite SAGBI Basis Guard in U(sl_2)";
+  ring r7 = 0, (e, f, h), lp;
+  matrix C7[3][3]; C7[1,2]=1; C7[1,3]=1; C7[2,3]=1;
+  matrix D7[3][3]; D7[1,2]=-h; D7[1,3]=2e; D7[2,3]=-2f;
+  def A7 = nc_algebra(C7, D7); 
+  setring A7;
+  ideal H = h, e^2, f^2, e*f*h;
+  ideal SB = ncsagbi(H, 5);
+  SB;
+}

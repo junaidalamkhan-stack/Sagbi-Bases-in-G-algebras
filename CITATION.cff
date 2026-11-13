@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article below."
+title: "ncsagbi.lib: SAGBI bases in G-algebras in Singular"
+version: "1.0"
+date-released: "2026-11-13"
+license: GPL-3.0-or-later
+repository-code: "https://github.com/junaidalamkhan-stack/Sagbi-Bases-in-G-algebras"
+keywords:
+  - SAGBI bases
+  - G-algebras
+  - subalgebras
+  - Singular
+  - Plural
+authors:
+  - family-names: Khan
+    given-names: Muhammad Abdul Basit
+    affiliation: "Institute of Business Administration, Karachi"
+  - family-names: Khan
+    given-names: Junaid Alam
+    affiliation: "Institute of Business Administration, Karachi"
+preferred-citation:
+  type: article
+  title: "SAGBI Bases in G-Algebras"
+  journal: "Symmetry"
+  volume: 11
+  issue: 2
+  start: 221
+  year: 2019
+  doi: "10.3390/sym11020221"
+  authors:
+    - family-names: Khan
+      given-names: Muhammad Abdul Basit
+    - family-names: Khan
+      given-names: Junaid Alam
+    - family-names: Binyamin
+      given-names: Muhammad Ahsan

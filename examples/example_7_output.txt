@@ -1,0 +1,10 @@
+4efh-2h2-2h
+0
+Added new generator of degree: 4
+Added new generator of degree: 4
+SB[1]=h
+SB[2]=e2
+SB[3]=f2
+SB[4]=efh
+SB[5]=e3f-1/2e2h2-5/2e2h-2e2
+SB[6]=ef3-1/2f2h2+3/2f2h
